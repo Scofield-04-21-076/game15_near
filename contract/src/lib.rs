@@ -100,18 +100,32 @@ impl Pazzle {
                 }
             }
         }
+
+        require!(self.isSolvable(shuffle),
+                "the resulting permutation does not resolve");
+
         let mut game: Game = Game::default();
-        game.vector = shuffle;
+        game.vector = shuffle.clone();
         self.games.insert(&env::predecessor_account_id(), &game);
 
         let mut player: Player = Player::default();
         player.is_finish_game = false;
         self.players.insert(&env::predecessor_account_id(), &player);
-
-
-
     }
 
+    pub fn isSolvable(&self, tiles: Vector<u8>) -> bool {
+        let mut countInversions:u8 = 0;
+
+        for i in 0..SIZE-1 {
+            for j in 0..i {
+                if tiles.get(j as u32) > tiles.get(i as u32) {
+                    countInversions += 1;
+                }
+            }
+        }
+
+        countInversions % 2 == 0
+    }
 
 
 
