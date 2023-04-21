@@ -127,6 +127,35 @@ impl Pazzle {
         countInversions % 2 == 0
     }
 
+    pub fn isSolved(&self) -> bool {
+
+        let game = self.expect_value_found(
+            self.games.get(&env::predecessor_account_id()));
+
+        if self.expect_value_found(
+            game.vector.get(game.vector.len() - 1)) != 0 as u8 {
+            return false;
+        }
+
+        for i in (0..SIZE).rev() {
+            if self.expect_value_found(
+                game.vector.get(i as u32)) != (i + 1) as u8 {
+                return false;
+            }
+        }
+
+        true
+    }
+
+
+
+
+
+    pub fn expect_value_found<T>(&self, option: Option<T>) -> T {
+
+        option.unwrap_or_else(|| env::panic_str("Not found"))
+    }
+
 
 
 }
