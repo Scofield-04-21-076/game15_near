@@ -1,5 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{AccountId, env, near_bindgen, require};
+use near_sdk::{AccountId, env, log, near_bindgen, require};
 use near_sdk::collections::LookupMap;
 use near_sdk::store::Vector;
 
@@ -86,20 +86,7 @@ impl Pazzle {
 
     pub fn new_game(&mut self, shuffle: Vector<u8>) {
 
-        require!(shuffle.len() == SIZE,
-            "unexpected number of values (16 needed)");
-
-        for i in 0..SIZE {
-            let buff = shuffle.get(i as u32);
-            require!(buff > 0 && buff < 15,
-                "unexpected number of values (0-15 needed)");
-            for j in 0..SIZE {
-                if i != j {
-                    require!(buff != shuffle.get(j as u32),
-                        "unexpected number of values (repetition of values)");
-                }
-            }
-        }
+        self.check_tiles(shuffle);
 
         require!(self.isSolvable(shuffle),
                 "the resulting permutation does not resolve");
@@ -147,7 +134,72 @@ impl Pazzle {
         true
     }
 
+    pub fn run(&mut self, tiles: Vector<u8>) {
 
+        self.check_tiles(tiles);
+
+        let mut x: &u8;
+        let mut x0: &u8;
+
+        let mut x_x0: Vector<u8>;
+
+        let game = self.expect_value_found(
+            self.games.get(&env::predecessor_account_id()));
+
+        for i in 0..SIZE {
+            if self.expect_value_found(
+                game.vector.get(i as u32)) != tiles.get(i as u32) {
+                x_x0.push(i);
+            }
+        }
+
+        require!(x_x0.len() != 0, "the move was not made");
+        require!(x_x0.len() == 2, "only one permutation can be done in one turn");
+
+        match self.expect_value_found(tiles.get(x_x0.get(0) as u32)) {
+            0 => {
+                x = self.expect_value_found(x_x0.get(0));
+                x0 = self.expect_value_found(x_x0.get(1));
+            },
+            _ => {
+                x0 = self.expect_value_found(x_x0.get(0));
+                x = self.expect_value_found(x_x0.get(1));
+            }
+        }
+
+        require!(
+            self.expect_value_found(game.vector.get(x)) == 0 &&
+            ((x % 4 != 0 && x0 % 4 != 3) ||
+                (x0 % 4 != 0 && x % 4 != 3)) &&
+            (((x0 - x) == 1 || (x0 - x) == -1 ) ||
+                ((x0 - x) == 4 || (x0 - x) == -4 )),
+            "not a correct move");
+
+        let value = self.expect_value_found(tiles.get(x0 as u32));
+        std::mem::replace(&mut game.vector[x], value);
+        std::mem::replace(&mut game.vector[x0], 0);
+
+        self.games.insert(&env::predecessor_account_id(), &game);
+        log!("the move is successful");
+    }
+
+
+    pub fn check_tiles(&self, tiles: Vector<u8>) {
+        require!(tiles.len() == SIZE,
+            "unexpected number of values (16 needed)");
+
+        for i in 0..SIZE {
+            let buff = tiles.get(i as u32);
+            require!(buff > 0 && buff < 15,
+                "unexpected number of values (0-15 needed)");
+            for j in 0..SIZE {
+                if i != j {
+                    require!(buff != tiles.get(j as u32),
+                        "unexpected number of values (repetition of values)");
+                }
+            }
+        }
+    }
 
 
 
