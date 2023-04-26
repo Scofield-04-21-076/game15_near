@@ -173,14 +173,13 @@ impl Pazzle {
 }
 
 impl Pazzle {
-    pub fn string_to_vector(&self, mut tiles: String) -> Vector<u8>{
+    pub fn string_to_vector(&self, tiles: String) -> Vector<u8>{
         let mut vector: Vector<u8> = Vector::new(b"vec-uid-1".to_vec());
 
-        for i in 0..SIZE {
-            vector.push(&(self.expect_value_found(tiles.remove(0).to_digit(10)) as u8));
-            if i != SIZE - 1 {
-                tiles.remove(0);
-            }
+        let v: Vec<u8> = tiles.split(',').map(|x| x.parse::<u8>().unwrap()).collect();
+
+        for x in &v {
+            vector.push(x);
         }
 
         vector
@@ -195,8 +194,10 @@ impl Pazzle {
 
         for i in 0..SIZE {
             let buff = tiles_vec.get(i as u64);
-            require!(buff > Some(0) && buff < Some(15),
+
+            require!(buff > Some(0) && buff <= Some(15),
                 "unexpected number of values (0-15 needed)");
+
             for j in 0..SIZE {
                 if i != j {
                     require!(buff != tiles_vec.get(j as u64),
