@@ -86,7 +86,7 @@ impl Pazzle {
             }
         }
 
-        count_inversions % 2 == 0
+        count_inversions % 2 != 0
     }
 
 
@@ -95,6 +95,18 @@ impl Pazzle {
 
         let tiles_vec = self.string_to_vector(tiles.clone());
 
+        for i in 0..SIZE {
+
+            log!(
+            r#"EVENT_JSON:{{
+                "standard":"",
+                "version":"1.0.0",
+                "event":"1",
+                "data":[{{"tiles_vec":"{}",
+                    }}]}}"#,
+            self.expect_value_found(tiles_vec.get(i as u64)),
+        );
+        }
         self.check_tiles(tiles.clone());
 
         let x: u8;
@@ -104,11 +116,46 @@ impl Pazzle {
 
         let mut game = self.expect_value_found(
             self.games.get(&env::predecessor_account_id()));
-        let game_tiles = self.string_to_vector(game.tiles);
+        let game_tiles = self.string_to_vector(game.tiles.clone());
 
         for i in 0..SIZE {
+
+            log!(
+            r#"EVENT_JSON:{{
+                "standard":"",
+                "version":"1.0.0",
+                "event":"2",
+                "data":[{{"game_tiles":"{:?}",
+                    }}]}}"#,
+            game_tiles.get(i as u64),
+        );
+        }
+        for i in 0..SIZE {
+
+            log!(
+            r#"EVENT_JSON:{{
+                "standard":"",
+                "version":"1.0.0",
+                "event":"3",
+                "data":[{{"tiles_vec":"{:?}",
+                    }}]}}"#,
+            tiles_vec.get(i as u64),
+        );
+
+            log!(
+            r#"EVENT_JSON:{{
+                "standard":"",
+                "version":"1.0.0",
+                "event":"4",
+                "data":[{{"game_tiles":"{:?}",
+                    }}]}}"#,
+           game_tiles.get(i as u64),
+        );
+
             if self.expect_value_found(
-                game_tiles.get(i as u64)) != self.expect_value_found(tiles_vec.get(i as u64)) {
+                game_tiles.get(i as u64)) !=
+                self.expect_value_found(tiles_vec.get(i as u64)) {
+
                 x_x0.push(&i);
             }
         }
@@ -163,6 +210,12 @@ impl Pazzle {
         log!("the move is successful");
     }
 
+    pub fn get_tiles(&self) -> String {
+        let game = self.expect_value_found(
+            self.games.get(&env::predecessor_account_id()));
+
+        game.tiles
+    }
 
 
 
@@ -195,7 +248,7 @@ impl Pazzle {
         for i in 0..SIZE {
             let buff = tiles_vec.get(i as u64);
 
-            require!(buff > Some(0) && buff <= Some(15),
+            require!(buff >= Some(0) && buff <= Some(15),
                 "unexpected number of values (0-15 needed)");
 
             for j in 0..SIZE {
