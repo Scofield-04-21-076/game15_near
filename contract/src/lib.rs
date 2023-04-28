@@ -130,11 +130,10 @@ impl Pazzle {
         let i_x0: i8 = x0 as i8;
 
         require!(
-            game_tiles[x as usize] == 0 &&
-            ((i_x % 4 != 0 && i_x0 % 4 != 3) ||
-                (i_x0 % 4 != 0 && i_x % 4 != 3)) &&
-            (((i_x0 - i_x) == 1 || (i_x0 - i_x) == -1 ) ||
-                ((i_x0 - i_x) == 4 || (i_x0 - i_x) == -4 )),
+            game_tiles[x0 as usize] == 0 &&
+            ((((i_x % 4 != 0 && i_x0 % 4 != 3)) && ((i_x0 - i_x) != 1 || (i_x0 - i_x) != -1 )) ||
+                (i_x0 % 4 != 0 && i_x % 4 != 3) && ((i_x0 - i_x) != 1 || (i_x0 - i_x) != -1 )) ||
+            ((i_x0 - i_x) == 4 || (i_x0 - i_x) == -4 ),
             "not a correct move");
 
         let value = tiles_copy[x0 as usize];
