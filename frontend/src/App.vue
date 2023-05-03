@@ -1,26 +1,50 @@
 <template>
   <div class="block-container">
     <div>
-      <button v-if="!signedIn" class="btn-contact connect" @click="login">
-        <span id="buttonConnectContent">Connect</span>
+      <button v-if="!signedIn" @click="login">
+        <span> Connect </span>
       </button>
-      <div class="header-btns-wrapper" v-else>
-        <div class="btn">{{ getAccountId() }}</div>
-        <button class="btn btn-logout " @click="logout">
+      <div v-else>
+        <div>{{ getAccountId() }}</div>
+        <button @click="logout">
           <div class="icon-logout"></div>
         </button>
       </div>
     </div>
   </div>
+
+  <div class="block-container">
+    <div class="wrapper">
+      <div class="grid">
+    <div 
+    v-for="tile in state"
+    :key="tile"
+    >
+      <button class="button list" @click="run(tile)">{{ tile }}</button>
+
+    </div>
+  </div>
+</div>
+<button @click="newGameStart">
+  <span> New </span>
+</button>
+  </div>
 </template>
 
 <script>
-import { isSignedIn, login, logout } from './near/utils';
+import { run } from './near/utils';
+import { isSignedIn, login, logout, newGame } from './near/utils';
+
+const FIFTEEN = Array.from({length: 15}, (e, i) => i + 1);
+FIFTEEN.push(0);
+
+const FIFTEEN_KEY = "FIFTEEN";
 
 export default {
   data() {
     return{
-
+      fifteen: FIFTEEN,
+      state: [...FIFTEEN]
     }
   },  
   methods:{
@@ -33,11 +57,78 @@ export default {
 
     getAccountId() {
       return window.walletConnection.getAccountId();
+    },
+
+    async newGameStart() {
+      do {
+        this.state.sort(() => Math.random() - 0.5);
+      } while (!this.isSolvable());
+
+      localStorage.setItem(FIFTEEN_KEY, this.state);
+
+      await newGame(this.state);
+    },
+
+    getAndSetState() {
+      const localState = localStorage.getItem(FIFTEEN_KEY);
+      
+      if(localState !== null) {
+        this.state = this.stringStateToArray(localStorage.getItem(FIFTEEN_KEY));
+      }
+    },
+
+    stringStateToArray(stringState) {
+      let state = stringState.split(',').map(Number);
+      return state;
+    },
+
+    isSolvable() {
+      let countInversion = 0;
+      
+      for(let i = 0; i < this.state.length - 1; i++) {
+        for(let j = 0; j < i; j++) {
+          if (this.state[j] > this.state[i]) {
+            countInversion++;
+          }
+        }
+      }
+
+      return countInversion % 2 == 0;
+    },
+
+    isPlayable(zeroIndex, tileIndex, width) {
+      return (zeroIndex % width !== 0 && zeroIndex - 1 === tileIndex) ||
+      (zeroIndex % width !== width - 1 && zeroIndex + 1 === tileIndex) ||
+      zeroIndex - width === tileIndex ||
+      zeroIndex + width === tileIndex
+    },
+
+    async run(tile) {
+      const zeroIndex = this.state.indexOf(0);
+      const tileIndex = this.state.indexOf(tile);
+      if (this.isPlayable(zeroIndex, tileIndex, 4)) {
+        this.updateState(tileIndex);
+        await run(this.state);
+      }
+    },
+
+    updateState(tileIndex) {
+      const updated = [...this.state];
+
+      updated[this.state.indexOf(0)] = this.state[tileIndex];
+      updated[tileIndex] = 0;
+      this.state = updated;
+      localStorage.setItem(FIFTEEN_KEY, this.state);
     }
+
+
   },
   computed: {
     signedIn() { return window.walletConnection.isSignedIn() }
   },
+  mounted () {
+    this.getAndSetState();
+  }
 }
 </script>
 
@@ -67,5 +158,63 @@ export default {
     background-size: contain;
     background-position: center;
     filter: brightness(5);
+}
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid teal;
+  font-size: 18px;
+  font-family: inherit;
+  background: #fff;
+  cursor: pointer;
+}
+.button:focus {
+  outline: none;
+  color: #fff;
+  background: rgb(5, 65, 65);
+}
+
+.button:focus:active {
+  background: #fff;
+  color: inherit;
+}
+
+.button:disabled {
+  color: inherit;
+  cursor: default;
+}
+
+.wrapper {
+  position: relative;
+  width: 95vmin;
+  height: 95vmin;
+  max-width: 500px;
+  max-height: 500px;
+  border-radius: 8px;
+  list-style: none;
+  overflow: hidden;
+  padding: 8px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 4px;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item {
+  user-select: none;
+  cursor: pointer;
+}
+.list-move {
+  transition: transform 0.4s ease;
 }
 </style>
