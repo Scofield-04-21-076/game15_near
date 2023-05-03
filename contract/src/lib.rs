@@ -84,14 +84,12 @@ impl Pazzle {
             }
         }
 
-        count_inversions % 2 != 0
+        count_inversions % 2 == 0
     }
 
 
 
     pub fn run(&mut self, tiles: [u8; SIZE]) {
-
-        let mut tiles_copy = tiles.clone();
 
         self.check_tiles(tiles.clone());
 
@@ -136,12 +134,7 @@ impl Pazzle {
             ((i_x0 - i_x) == 4 || (i_x0 - i_x) == -4 ),
             "not a correct move");
 
-        let value = tiles_copy[x0 as usize];
-        tiles_copy[x as usize] = value;
-        tiles_copy[x0 as usize] = 0;
-
-        game.tiles = tiles_copy;
-
+        game.tiles = tiles;
         self.games.insert(&env::predecessor_account_id(), &game);
         log!("the move is successful");
     }
