@@ -107,20 +107,20 @@ export function getSmartContractLink() {
 
 // ---------------- methods for interacting with the contract ---------------- //
 
-export async function newGame(shufle) {
+export async function newGame(shuffle) {
 
     // tarif = Number(tarif)
     // amount = utils.format.parseNearAmount(amount.toString())
 
     await window.contract.new_game({
-        args: {shufle: shufle.toString()},
+        args: {shuffle: shuffle},
     })
 }
 
 export async function run(tiles) {
 
     await window.contract.run({
-        args: {tiles: tiles.toString()},
+        args: {tiles: tiles},
     })
 }
 
