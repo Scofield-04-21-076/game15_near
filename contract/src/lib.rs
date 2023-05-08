@@ -1,5 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{AccountId, BorshStorageKey, env, log, near_bindgen, require};
+use near_sdk::{AccountId, BorshStorageKey, env, log, near_bindgen, Promise, require};
 use near_sdk::collections::{LookupMap};
 use near_sdk::serde::{Deserialize, Serialize};
 
@@ -89,8 +89,21 @@ impl Pazzle {
         let mut player = self.expect_value_found(
             self.players.get(&env::predecessor_account_id()));
 
+        require!(player.price == 0,"you have already placed a bet");
         player.price = env::attached_deposit();
         self.players.insert(&env::predecessor_account_id(), &player);
+    }
+
+    pub fn withdraw_and_cancel_price(&mut self) {
+        let mut player = self.expect_value_found(
+            self.players.get(&env::predecessor_account_id()));
+
+        require!(player.price > 0,"you don't have a bid");
+
+        Promise::new(
+            AccountId::new_unchecked(
+                env::predecessor_account_id().to_string())).
+            transfer(player.price);
     }
 
 
