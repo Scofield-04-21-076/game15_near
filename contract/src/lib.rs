@@ -77,9 +77,9 @@ impl Pazzle {
         require!(self.players_vec.len() != 0,"there are no players");
 
         let mut players: Vec<Player> = Vec::new();
-        for accountId in self.players_vec {
+        for account_id in &self.players_vec {
             players.push(self.expect_value_found(
-                self.players.get(&accountId)));
+                self.players.get(&account_id)));
         }
 
         players
