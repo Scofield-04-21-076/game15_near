@@ -17,6 +17,7 @@ pub enum StorageKey{
 #[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde" )]
 pub struct Player {
+    price: u128,
     is_finish_game: bool,
 
 }
@@ -24,6 +25,7 @@ pub struct Player {
 impl Default for Player {
     fn default() -> Self {
         Self {
+            price: 0,
             is_finish_game: true,
         }
     }
@@ -41,6 +43,7 @@ pub struct Game {
 pub struct Pazzle {
     pub players: LookupMap<AccountId, Player>,
     pub games: LookupMap<AccountId, Game>,
+    pub players_vec: Vec<AccountId>,
 
 }
 
@@ -50,12 +53,47 @@ impl Default for Pazzle {
         Pazzle{
             players: LookupMap::new(StorageKey::Players),
             games: LookupMap::new(StorageKey::Games),
+            players_vec: Vec::new(),
         }
     }
 }
 
 #[near_bindgen]
 impl Pazzle {
+    pub fn add_me_to_players(&mut self) {
+
+        require!(!self.players_vec.contains(&env::predecessor_account_id()),
+                "you are already in the player list");
+
+        self.players_vec.push(env::predecessor_account_id());
+        self.players.insert(&env::predecessor_account_id(), &Player::default());
+    }
+
+    pub fn is_i_in_players(&self) -> bool {
+        self.players_vec.contains(&env::predecessor_account_id())
+    }
+
+    pub fn get_players(&self) -> Vec<Player> {
+        require!(self.players_vec.len() != 0,"there are no players");
+
+        let mut players: Vec<Player> = Vec::new();
+        for accountId in self.players_vec {
+            players.push(self.expect_value_found(
+                self.players.get(&accountId)));
+        }
+
+        players
+    }
+
+    pub fn set_price(&mut self) {
+        let mut player = self.expect_value_found(
+            self.players.get(&env::predecessor_account_id()));
+
+        player.price = env::attached_deposit();
+        self.players.insert(&env::predecessor_account_id(), &player);
+    }
+
+
     pub fn new_game(&mut self, shuffle: [u8; SIZE]) {
 
         self.check_tiles(shuffle.clone());
