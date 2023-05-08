@@ -100,6 +100,9 @@ impl Pazzle {
 
         require!(player.price > 0,"you don't have a bid");
 
+        player.price = 0;
+        self.players.insert(&env::predecessor_account_id(), &player);
+
         Promise::new(
             AccountId::new_unchecked(
                 env::predecessor_account_id().to_string())).
