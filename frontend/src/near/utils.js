@@ -1,4 +1,4 @@
-import { connect, Contract, KeyPair, keyStores, WalletConnection } from 'near-api-js'
+import { connect, Contract, KeyPair, keyStores, utils, WalletConnection } from 'near-api-js'
 
 import { CONTRACT_NAME, getConfig } from './config'
 
@@ -17,8 +17,8 @@ export async function initContract() {
         window.walletConnection.account(),
         nearConfig.contractName,
         {
-            viewMethods: ['get_tiles'],
-            changeMethods: ['new_game', 'run'],
+            viewMethods: ['get_tiles', 'is_i_in_players', 'get_players'],
+            changeMethods: ['new_game', 'run', 'add_me_to_players', 'set_price'],
         }
     )
 }
@@ -115,9 +115,6 @@ export function getSmartContractLink() {
 
 export async function newGame(shuffle) {
 
-    // tarif = Number(tarif)
-    // amount = utils.format.parseNearAmount(amount.toString())
-
     await window.contract.new_game({
         args: {shuffle: shuffle},
     })
@@ -127,6 +124,30 @@ export async function run(tiles) {
 
     await window.contract.run({
         args: {tiles: tiles},
+    })
+}
+
+export async function getPlayers() {
+
+    return await window.contract.get_players()
+}
+
+export async function addMeToPlayers() {
+
+    await window.contract.add_me_to_players()
+}
+
+export async function isIInPlayers() {
+
+    return await window.contract.is_i_in_players()
+}
+
+export async function setPrice(amount) {
+
+    amount = utils.format.parseNearAmount(amount.toString());
+
+    return await window.contract.set_price({
+        amount: amount
     })
 }
 
