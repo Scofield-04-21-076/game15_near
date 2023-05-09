@@ -18,7 +18,8 @@ pub enum StorageKey{
 #[serde(crate = "near_sdk::serde" )]
 pub struct Player {
     price: u128,
-    is_finish_game: bool,
+    opponent: Option<AccountId>,
+    is_play: bool,
 
 }
 
@@ -26,7 +27,8 @@ impl Default for Player {
     fn default() -> Self {
         Self {
             price: 0,
-            is_finish_game: true,
+            opponent: None,
+            is_play: false,
         }
     }
 }
@@ -111,6 +113,31 @@ impl Pazzle {
             AccountId::new_unchecked(
                 env::predecessor_account_id().to_string())).
             transfer(player.price);
+    }
+
+    pub fn set_opponent(&mut self, opponent_id: AccountId) {
+        require!(
+           env::is_valid_account_id(opponent_id.as_bytes()),
+           "Account does not exist");
+        require!(
+           self.players_vec.contains(&opponent_id),
+           "the opponent is not from the list of players");
+        require!(
+           self.players_vec.contains(&env::predecessor_account_id()),
+           "you are not in the player list");
+
+        let mut player = self.expect_value_found(
+            self.players.get(&env::predecessor_account_id()));
+        player.opponent = Some(opponent_id);
+        player.is_play = true;
+        self.players.insert(&env::predecessor_account_id(), &player);
+    }
+
+    pub fn get_opponent(&self) -> Option<AccountId> {
+        let player = self.expect_value_found(
+            self.players.get(&env::predecessor_account_id()));
+
+        player.opponent
     }
 
 
