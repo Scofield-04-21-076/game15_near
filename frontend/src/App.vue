@@ -5,46 +5,81 @@
         <span> Connect </span>
       </button>
       <div v-else>
-        <div>{{ getAccountId() }}</div>
+        {{ getAccountId() }}
         <button @click="logout">
           <div class="icon-logout"></div>
         </button>
+        <div>
+          <button @click="addPlayers">
+            <span> Add me to players</span>
+          </button>
+        </div>
+        <div>
+          Price (NEAR):
+          <input 
+            v-bind:value="priceAmount"
+            @input="priceAmount = $event.target.value"
+            type="number" 
+            min="0" 
+            max="99999999"
+          />
+          <button @click="putPrice">Put</button>
+        </div>
+        <div>
+          <button @click="withdrawPrice">Withdraw Price</button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <div class="block-container">
+    <div>
+      Players (price):
+    </div>
+    <div>
+      <ul v-for="element in players"
+          :key="element">
+        <li>
+          {{ element["player"] }} ({{ element["price"] }} NEAR)
+        </li>
+      </ul>
     </div>
   </div>
 
   <div class="block-container">
     <div class="wrapper">
       <div class="grid">
-    <div 
-    v-for="tile in state"
-    :key="tile"
-    >
-      <button class="button list" @click="run(tile)">{{ tile }}</button>
-
+        <div 
+          v-for="tile in state"
+          :key="tile"
+        >
+          <button class="button list" @click="run(tile)">{{ tile }}</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<button @click="newGameStart">
-  <span> New </span>
-</button>
+    <button @click="newGameStart">
+      <span> New </span>
+    </button>
   </div>
 </template>
 
 <script>
-import { run } from './near/utils';
-import { isSignedIn, login, logout, newGame } from './near/utils';
+import { addMeToPlayers, getPlayers, run, setPrice } from './near/utils';
+import { isSignedIn, login, logout, newGame, withdrawCancelPrice } from './near/utils';
 
 const FIFTEEN = Array.from({length: 15}, (e, i) => i + 1);
 FIFTEEN.push(0);
 
 const FIFTEEN_KEY = "FIFTEEN";
+const YOCTO = 1_000_000_000_000_000_000_000_000;
 
 export default {
   data() {
     return{
       fifteen: FIFTEEN,
-      state: [...FIFTEEN]
+      state: [...FIFTEEN],
+      players: [],
+      priceAmount: 0,
     }
   },  
   methods:{
@@ -119,6 +154,40 @@ export default {
       updated[tileIndex] = 0;
       this.state = updated;
       localStorage.setItem(FIFTEEN_KEY, this.state);
+    },
+
+    async addPlayers() {
+      await addMeToPlayers();
+    },
+
+    async putPrice() {
+      await setPrice(this.priceAmount);
+    },
+
+    async withdrawPrice() {
+      await withdrawCancelPrice();
+    },
+
+    showPlayers() {
+      var players;
+
+      setInterval( () => {
+        players = getPlayers()
+        players.then(
+          (result) => {
+            for (let i = 0, k = result.length / 2; i < result.length / 2; i++, k++) {
+              for(let j = 0; j < result.length; j++) {
+                this.players[j] = {
+                  "player": result[i][j],
+                  "price": result[k][j].price / YOCTO
+                };
+              }
+            }
+          },
+          // eslint-disable-next-line
+          (reason) => { }
+        )
+      }, 1000)
     }
 
 
@@ -128,6 +197,7 @@ export default {
   },
   mounted () {
     this.getAndSetState();
+    this.showPlayers();
   }
 }
 </script>
