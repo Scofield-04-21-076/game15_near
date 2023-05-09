@@ -73,18 +73,21 @@ impl Pazzle {
         self.players_vec.contains(&env::predecessor_account_id())
     }
 
-    pub fn get_players(&self) -> Vec<Player> {
+    pub fn get_players(&self) -> (Vec<AccountId>, Vec<Player>) {
         require!(self.players_vec.len() != 0,"there are no players");
 
         let mut players: Vec<Player> = Vec::new();
+        let mut accounts: Vec<AccountId> = Vec::new();
         for account_id in &self.players_vec {
+            accounts.push(account_id.clone());
             players.push(self.expect_value_found(
                 self.players.get(&account_id)));
         }
 
-        players
+        (accounts, players)
     }
 
+    #[payable]
     pub fn set_price(&mut self) {
         let mut player = self.expect_value_found(
             self.players.get(&env::predecessor_account_id()));
@@ -94,6 +97,7 @@ impl Pazzle {
         self.players.insert(&env::predecessor_account_id(), &player);
     }
 
+    #[payable]
     pub fn withdraw_and_cancel_price(&mut self) {
         let mut player = self.expect_value_found(
             self.players.get(&env::predecessor_account_id()));

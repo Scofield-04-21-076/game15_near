@@ -18,7 +18,7 @@ export async function initContract() {
         nearConfig.contractName,
         {
             viewMethods: ['get_tiles', 'is_i_in_players', 'get_players'],
-            changeMethods: ['new_game', 'run', 'add_me_to_players', 'set_price'],
+            changeMethods: ['new_game', 'run', 'add_me_to_players', 'set_price', 'withdraw_and_cancel_price'],
         }
     )
 }
@@ -147,8 +147,14 @@ export async function setPrice(amount) {
     amount = utils.format.parseNearAmount(amount.toString());
 
     return await window.contract.set_price({
+        args: {},
         amount: amount
     })
+}
+
+export async function withdrawCancelPrice() {
+
+    await window.contract.withdraw_and_cancel_price()
 }
 
 export async function getTiles() {
