@@ -17,8 +17,8 @@ export async function initContract() {
         window.walletConnection.account(),
         nearConfig.contractName,
         {
-            viewMethods: ['get_tiles', 'is_i_in_players', 'get_players'],
-            changeMethods: ['new_game', 'run', 'add_me_to_players', 'set_price', 'withdraw_and_cancel_price'],
+            viewMethods: ['get_tiles', 'is_i_in_players', 'get_players', 'get_opponent'],
+            changeMethods: ['new_game', 'run', 'add_me_to_players', 'set_price', 'withdraw_and_cancel_price', 'set_opponent'],
         }
     )
 }
@@ -155,6 +155,18 @@ export async function setPrice(amount) {
 export async function withdrawCancelPrice() {
 
     await window.contract.withdraw_and_cancel_price()
+}
+
+export async function setOpponent(accountId) {
+
+    await window.contract.set_opponent({
+        args: {opponent_id: accountId}
+    })
+}
+
+export async function getOpponent() {
+
+    return await window.contract.get_opponent()
 }
 
 export async function getTiles() {
