@@ -128,6 +128,13 @@ impl Pazzle {
 
         let mut player = self.expect_value_found(
             self.players.get(&env::predecessor_account_id()));
+        if player.opponent.is_some() {
+            let old_opponent = self.expect_value_found(
+                self.players.get(
+                    &self.expect_value_found(player.opponent)));
+            require!(!old_opponent.is_play,
+                "your previous opponent has already accepted the game, end the game");
+        }
         player.opponent = Some(opponent_id);
         player.is_play = true;
         self.players.insert(&env::predecessor_account_id(), &player);
@@ -138,6 +145,19 @@ impl Pazzle {
             self.players.get(&env::predecessor_account_id()));
 
         player.opponent
+    }
+
+    pub fn is_play_player(&self, player_id: AccountId) -> bool {
+        require!(
+           env::is_valid_account_id(opponent_id.as_bytes()),
+           "Account does not exist");
+        require!(
+           self.players_vec.contains(&opponent_id),
+           "the opponent is not from the list of players");
+        let player = self.expect_value_found(
+            self.players.get(&player_id));
+
+        player.is_play
     }
 
 
