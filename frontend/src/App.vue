@@ -47,6 +47,32 @@
   </div>
 
   <div class="block-container">
+    <div>
+      You: {{ getAccountId() }} is play: {{ myIsPlay }}
+    </div>
+    <div>
+      Opponent: {{ opponentId }} is play: {{ opponentIsPlay }}
+    </div>
+  </div>
+
+  <div class="block-container">
+    <div>
+      Opponent
+      <input 
+        v-bind:value="opponent_input"
+        @input="opponent_input = $event.target.value"
+        type="string" 
+      />
+      <button @click="setOpponentButton(opponent_input)">Set</button>
+      <div>
+        <button @click="newGameStart">
+          <span> Start </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-container">
     <div class="wrapper">
       <div class="grid">
         <div 
@@ -57,14 +83,26 @@
         </div>
       </div>
     </div>
-    <button @click="newGameStart">
-      <span> New </span>
-    </button>
+
+    Opponent:
+    <div class="wrapper">
+      <div class="grid">
+        <div 
+          v-for="tile in stateOpponent"
+          :key="tile"
+        >
+          <button class="button list">{{ tile }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { addMeToPlayers, getPlayers, run, setPrice } from './near/utils';
+import { getOpponent } from './near/utils';
+import { getTiles } from './near/utils';
+import { setOpponent } from './near/utils';
+import { addMeToPlayers, getPlayers, run, setPrice, isPlayPlayer } from './near/utils';
 import { isSignedIn, login, logout, newGame, withdrawCancelPrice } from './near/utils';
 
 const FIFTEEN = Array.from({length: 15}, (e, i) => i + 1);
@@ -78,8 +116,13 @@ export default {
     return{
       fifteen: FIFTEEN,
       state: [...FIFTEEN],
+      stateOpponent: [],
       players: [],
       priceAmount: 0,
+      myIsPlay: "",
+      opponentId: "",
+      opponentIsPlay: "",
+      opponent_input: ""
     }
   },  
   methods:{
@@ -168,8 +211,15 @@ export default {
       await withdrawCancelPrice();
     },
 
+    async setOpponentButton(opponentId) {
+      await setOpponent(opponentId);
+    },
+
     showPlayers() {
       var players;
+      let myIsPlay;
+      let opponentIsPlay;
+      let opponentId;
 
       setInterval( () => {
         players = getPlayers()
@@ -187,10 +237,46 @@ export default {
           // eslint-disable-next-line
           (reason) => { }
         )
+        myIsPlay = isPlayPlayer(this.getAccountId());
+        myIsPlay.then(
+          (result) => {
+            this.myIsPlay = result
+          },
+          
+        )
+        opponentIsPlay = isPlayPlayer(this.opponentId);
+        opponentIsPlay.then(
+          (result) => {
+            this.opponentIsPlay = result
+          },
+          // eslint-disable-next-line
+          (reason) => { }
+        )
+        opponentId = getOpponent(this.getAccountId());
+        opponentId.then(
+          (result) => {
+            this.opponentId = result
+          },
+          // eslint-disable-next-line
+          (reason) => { }
+        )
       }, 1000)
+    },
+
+    showOpponentTiles() {
+      let state;
+      setInterval( () => {
+        state = getTiles(this.opponentId);
+        state.then(
+          (result) => {
+            this.stateOpponent = result
+          },
+          // eslint-disable-next-line
+          (reason) => { }
+        )
+      }, 1000)
+
     }
-
-
   },
   computed: {
     signedIn() { return window.walletConnection.isSignedIn() }
@@ -198,6 +284,7 @@ export default {
   mounted () {
     this.getAndSetState();
     this.showPlayers();
+    this.showOpponentTiles();
   }
 }
 </script>

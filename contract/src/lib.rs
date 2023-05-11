@@ -103,8 +103,12 @@ impl Pazzle {
     pub fn withdraw_and_cancel_price(&mut self) {
         let mut player = self.expect_value_found(
             self.players.get(&env::predecessor_account_id()));
+        let opponent = self.expect_value_found(
+            self.players.get(&self.expect_value_found(player.opponent.clone())));
 
-        require!(player.price > 0,"you don't have a bid");
+        require!(player.price > 0, "you don't have a bid");
+        require!(!opponent.is_play,
+            "must end the game, the opponent has already accepted your challenge");
 
         player.price = 0;
         self.players.insert(&env::predecessor_account_id(), &player);
@@ -135,25 +139,28 @@ impl Pazzle {
             require!(!old_opponent.is_play,
                 "your previous opponent has already accepted the game, end the game");
         }
+        let opponent = self.expect_value_found(
+            self.players.get(&opponent_id));
+        require!(player.price == opponent.price, "rates must be the same");
+
         player.opponent = Some(opponent_id);
-        player.is_play = true;
         self.players.insert(&env::predecessor_account_id(), &player);
     }
 
-    pub fn get_opponent(&self) -> Option<AccountId> {
+    pub fn get_opponent(&self, account_id: AccountId) -> Option<AccountId> {
         let player = self.expect_value_found(
-            self.players.get(&env::predecessor_account_id()));
+            self.players.get(&account_id));
 
         player.opponent
     }
 
     pub fn is_play_player(&self, player_id: AccountId) -> bool {
         require!(
-           env::is_valid_account_id(opponent_id.as_bytes()),
+           env::is_valid_account_id(player_id.as_bytes()),
            "Account does not exist");
         require!(
-           self.players_vec.contains(&opponent_id),
-           "the opponent is not from the list of players");
+           self.players_vec.contains(&player_id),
+           "player not found");
         let player = self.expect_value_found(
             self.players.get(&player_id));
 
@@ -163,17 +170,25 @@ impl Pazzle {
 
     pub fn new_game(&mut self, shuffle: [u8; SIZE]) {
 
+        let mut player: Player = self.expect_value_found(
+            self.players.get(&env::predecessor_account_id()));
+        let opponent: Player = self.expect_value_found(
+            self.players.get(&self.expect_value_found(player.opponent.clone())));
+        require!(!player.is_play && !opponent.is_play,
+                "you or your opponent are not yet ready to play");
+
         self.check_tiles(shuffle.clone());
 
         require!(self.is_solvable(shuffle.clone()),
                 "the resulting permutation does not resolve");
+        require!(player.opponent.is_some(),
+                "select an opponent");
 
         let mut game: Game = Game::default();
         game.tiles = shuffle.clone();
         self.games.insert(&env::predecessor_account_id(), &game);
 
-        let mut player: Player = Player::default();
-        player.is_finish_game = false;
+        player.is_play = true;
         self.players.insert(&env::predecessor_account_id(), &player);
     }
 
@@ -196,6 +211,13 @@ impl Pazzle {
 
     pub fn run(&mut self, tiles: [u8; SIZE]) {
 
+        let mut player: Player = self.expect_value_found(
+            self.players.get(&env::predecessor_account_id()));
+        let mut opponent: Player = self.expect_value_found(
+            self.players.get(&self.expect_value_found(player.opponent)));
+        require!(!player.is_play && !opponent.is_play,
+                "you or your opponent are not yet ready to play");
+
         self.check_tiles(tiles.clone());
 
         let x: u8;
@@ -205,6 +227,7 @@ impl Pazzle {
 
         let mut game = self.expect_value_found(
             self.games.get(&env::predecessor_account_id()));
+        log!("game: {:?}", game);
         let game_tiles = game.tiles.clone();
 
         for i in 0..SIZE {
@@ -242,11 +265,32 @@ impl Pazzle {
         game.tiles = tiles;
         self.games.insert(&env::predecessor_account_id(), &game);
         log!("the move is successful");
+
+        if self.is_solved() {
+            let win_price = player.price + opponent.price;
+
+            player.is_play = false;
+            player.price = 0;
+            player.opponent = None;
+
+            opponent.is_play = false;
+            opponent.price = 0;
+            opponent.opponent = None;
+
+            self.players.insert(&env::predecessor_account_id(), &player);
+            self.players.insert(&self.expect_value_found(player.opponent), &opponent);
+
+            log!("You WIN!!!");
+            Promise::new(
+                AccountId::new_unchecked(
+                    env::predecessor_account_id().to_string())).
+                transfer(win_price);
+        }
     }
 
-    pub fn get_tiles(&self) -> [u8; SIZE] {
+    pub fn get_tiles(&self, account_id: AccountId) -> [u8; SIZE] {
         let game = self.expect_value_found(
-            self.games.get(&env::predecessor_account_id()));
+            self.games.get(&account_id));
 
         game.tiles
     }
