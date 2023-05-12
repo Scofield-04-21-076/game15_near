@@ -214,9 +214,12 @@ impl Pazzle {
         let mut player: Player = self.expect_value_found(
             self.players.get(&env::predecessor_account_id()));
         let mut opponent: Player = self.expect_value_found(
-            self.players.get(&self.expect_value_found(player.opponent)));
+            self.players.get(&self.expect_value_found(player.opponent.clone())));
         require!(player.is_play && opponent.is_play,
                 "you or your opponent are not yet ready to play");
+
+        log!("player {:?}", player);
+        log!("opponent {:?}", opponent);
 
         self.check_tiles(tiles.clone());
 
@@ -228,6 +231,8 @@ impl Pazzle {
         let mut game = self.expect_value_found(
             self.games.get(&env::predecessor_account_id()));
         let game_tiles = game.tiles.clone();
+
+        log!("game {:?}", game);
 
         for i in 0..SIZE {
 
@@ -267,9 +272,11 @@ impl Pazzle {
 
         if self.is_solved() {
             let win_price = player.price + opponent.price;
+            log!("solved");
 
             player.is_play = false;
             player.price = 0;
+            let opponent_id = self.expect_value_found(player.opponent);
             player.opponent = None;
 
             opponent.is_play = false;
@@ -277,7 +284,7 @@ impl Pazzle {
             opponent.opponent = None;
 
             self.players.insert(&env::predecessor_account_id(), &player);
-            self.players.insert(&self.expect_value_found(player.opponent), &opponent);
+            self.players.insert(&opponent_id, &opponent);
 
             log!("You WIN!!!");
             Promise::new(
