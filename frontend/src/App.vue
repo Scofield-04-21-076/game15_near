@@ -122,7 +122,8 @@ export default {
       myIsPlay: "",
       opponentId: "",
       opponentIsPlay: "",
-      opponent_input: ""
+      opponent_input: "",
+      isStartGame: false,
     }
   },  
   methods:{
@@ -143,6 +144,7 @@ export default {
       } while (!this.isSolvable());
 
       localStorage.setItem(FIFTEEN_KEY, this.state);
+      this.isStartGame = true;
 
       await newGame(this.state);
     },
@@ -294,11 +296,14 @@ export default {
 
     checkWin() {
       setInterval( () => {
-        if(this.isSolved(this.state) && this.myIsPlay) {
+        if(this.isSolved(this.state) && this.isStartGame) {
           this.state = [...FIFTEEN];
+          this.isStartGame = false;
           alert("You win!!!")
         }
-        if(this.isSolved(this.stateOpponent)) {
+        if(this.isSolved(this.stateOpponent) && this.isStartGame) {
+          this.stateOpponent = [...FIFTEEN];
+          this.isStartGame = false;
           alert("You lost")
         }
       }, 1000)
