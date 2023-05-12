@@ -174,8 +174,8 @@ impl Pazzle {
             self.players.get(&env::predecessor_account_id()));
         let opponent: Player = self.expect_value_found(
             self.players.get(&self.expect_value_found(player.opponent.clone())));
-        require!(!player.is_play && !opponent.is_play,
-                "you or your opponent are not yet ready to play");
+        require!(!player.is_play || !opponent.is_play,
+                "finish the game");
 
         self.check_tiles(shuffle.clone());
 
@@ -215,7 +215,7 @@ impl Pazzle {
             self.players.get(&env::predecessor_account_id()));
         let mut opponent: Player = self.expect_value_found(
             self.players.get(&self.expect_value_found(player.opponent)));
-        require!(!player.is_play && !opponent.is_play,
+        require!(player.is_play && opponent.is_play,
                 "you or your opponent are not yet ready to play");
 
         self.check_tiles(tiles.clone());
@@ -227,7 +227,6 @@ impl Pazzle {
 
         let mut game = self.expect_value_found(
             self.games.get(&env::predecessor_account_id()));
-        log!("game: {:?}", game);
         let game_tiles = game.tiles.clone();
 
         for i in 0..SIZE {
@@ -334,7 +333,7 @@ impl Pazzle {
             return false;
         }
 
-        for i in (0..SIZE).rev() {
+        for i in (0..SIZE-1).rev() {
             if game.tiles[i] != (i + 1) as u8 {
                 return false;
             }

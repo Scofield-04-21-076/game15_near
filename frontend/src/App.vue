@@ -215,6 +215,20 @@ export default {
       await setOpponent(opponentId);
     },
 
+    isSolved(tiles) {
+      if(tiles[tiles.length - 1] != 0) {
+        return false;
+      }
+
+      for(let i = tiles.length - 1 - 1; i >= 0; i--) {
+        if(tiles[i] != i + 1){
+          return false;
+        }
+      }
+
+      return true;
+    },
+
     showPlayers() {
       var players;
       let myIsPlay;
@@ -276,6 +290,18 @@ export default {
         )
       }, 1000)
 
+    },
+
+    checkWin() {
+      setInterval( () => {
+        if(this.isSolved(this.state) && this.myIsPlay) {
+          this.state = [...FIFTEEN];
+          alert("You win!!!")
+        }
+        if(this.isSolved(this.stateOpponent)) {
+          alert("You lost")
+        }
+      }, 1000)
     }
   },
   computed: {
@@ -285,6 +311,7 @@ export default {
     this.getAndSetState();
     this.showPlayers();
     this.showOpponentTiles();
+    this.checkWin();
   }
 }
 </script>
