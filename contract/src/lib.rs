@@ -178,6 +178,7 @@ impl Pazzle {
                 "finish the game");
 
         self.check_tiles(shuffle.clone());
+        self.check_allocation(shuffle.clone());
 
         require!(self.is_solvable(shuffle.clone()),
                 "the resulting permutation does not resolve");
@@ -192,23 +193,6 @@ impl Pazzle {
         self.players.insert(&env::predecessor_account_id(), &player);
     }
 
-    #[private]
-    pub fn is_solvable(&self, tiles: [u8; SIZE]) -> bool {
-        let mut count_inversions: u8 = 0;
-
-        for i in 0..SIZE-1 {
-            for j in 0..i {
-                if tiles[j] > tiles[i] {
-                    count_inversions += 1;
-                }
-            }
-        }
-
-        count_inversions % 2 == 0
-    }
-
-
-
     pub fn run(&mut self, tiles: [u8; SIZE]) {
 
         let mut player: Player = self.expect_value_found(
@@ -217,9 +201,6 @@ impl Pazzle {
             self.players.get(&self.expect_value_found(player.opponent.clone())));
         require!(player.is_play && opponent.is_play,
                 "you or your opponent are not yet ready to play");
-
-        log!("player {:?}", player);
-        log!("opponent {:?}", opponent);
 
         self.check_tiles(tiles.clone());
 
@@ -231,8 +212,6 @@ impl Pazzle {
         let mut game = self.expect_value_found(
             self.games.get(&env::predecessor_account_id()));
         let game_tiles = game.tiles.clone();
-
-        log!("game {:?}", game);
 
         for i in 0..SIZE {
 
@@ -272,7 +251,6 @@ impl Pazzle {
 
         if self.is_solved() {
             let win_price = player.price + opponent.price;
-            log!("solved");
 
             player.is_play = false;
             player.price = 0;
@@ -299,6 +277,29 @@ impl Pazzle {
             self.games.get(&account_id));
 
         game.tiles
+    }
+
+    #[private]
+    pub fn is_solvable(&self, tiles: [u8; SIZE]) -> bool {
+        let mut count_inversions: u8 = 0;
+
+        for i in 0..SIZE-1 {
+            for j in 0..i {
+                if tiles[j] > tiles[i] {
+                    count_inversions += 1;
+                }
+            }
+        }
+
+        count_inversions % 2 == 0
+    }
+
+    #[private]
+    pub fn check_allocation(&self, tiles: [u8; SIZE]) {
+        for i in 0..SIZE {
+            require!(!(tiles[i] + 1 == tiles[i+1]),
+                "this sequence is like cheating");
+        }
     }
 
 
