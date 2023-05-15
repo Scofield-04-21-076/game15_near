@@ -296,8 +296,8 @@ impl Pazzle {
 
     #[private]
     pub fn check_allocation(&self, tiles: [u8; SIZE]) {
-        for i in 0..SIZE {
-            require!(!(tiles[i] + 1 == tiles[i+1]),
+        for i in 0..SIZE-2 {
+            require!(!(tiles[i] + 1 == tiles[i+1] && tiles[i] + 2 == tiles[i+2]),
                 "this sequence is like cheating");
         }
     }
