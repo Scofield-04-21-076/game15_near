@@ -3,15 +3,12 @@ use near_sdk::{AccountId, BorshStorageKey, env, log, near_bindgen, Promise, requ
 use near_sdk::collections::{LookupMap};
 use near_sdk::serde::{Deserialize, Serialize};
 
-
 const SIZE: usize = 16;
 
 #[derive(BorshSerialize, BorshStorageKey)]
 pub enum StorageKey{
-    VectorNumber,
     Players,
     Games,
-
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
@@ -48,7 +45,6 @@ pub struct Pazzle {
     pub players_vec: Vec<AccountId>,
 
 }
-
 
 impl Default for Pazzle {
     fn default() -> Self {
@@ -304,13 +300,6 @@ impl Pazzle {
                 "this sequence is like cheating");
         }
     }
-
-
-
-
-
-
-
 }
 
 impl Pazzle {
