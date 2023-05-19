@@ -140,6 +140,7 @@ impl Pazzle {
         require!(player.price == opponent.price, "rates must be the same");
 
         player.opponent = Some(opponent_id);
+        player.is_play = false;
         self.players.insert(&env::predecessor_account_id(), &player);
     }
 

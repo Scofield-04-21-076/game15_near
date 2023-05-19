@@ -79,7 +79,7 @@
           v-for="tile in state"
           :key="tile"
         >
-          <button class="button list" @click="run(tile)">{{ tile }}</button>
+          <button class="button list" @click="run(tile)">{{ tile ? tile : "&nbsp;" }}</button>
         </div>
       </div>
     </div>
@@ -91,7 +91,7 @@
           v-for="tile in stateOpponent"
           :key="tile"
         >
-          <button class="button list">{{ tile }}</button>
+          <button class="button list">{{ tile ? tile : "&nbsp;" }}</button>
         </div>
       </div>
     </div>
@@ -241,13 +241,13 @@ export default {
         players = getPlayers()
         players.then(
           (result) => {
-            for (let i = 0, k = result.length / 2; i < result.length / 2; i++, k++) {
-              for(let j = 0; j < result.length; j++) {
-                this.players[j] = {
-                  "player": result[i][j],
-                  "price": result[k][j].price / YOCTO
+            console.log(result);
+            console.log(result.length);
+            for (let i = 0; i < result[0].length; i++) {
+                this.players[i] = {
+                  "player": result[0][i],
+                  "price": result[1][i].price / YOCTO
                 };
-              }
             }
           },
           // eslint-disable-next-line

@@ -1,6 +1,6 @@
-import { connect, Contract, KeyPair, keyStores, utils, WalletConnection } from 'near-api-js'
+import { connect, Contract, keyStores, utils, WalletConnection } from 'near-api-js'
 
-import { CONTRACT_NAME, getConfig } from './config'
+import { getConfig } from './config'
 
 
 const nearConfig = getConfig('testnet')
@@ -39,13 +39,6 @@ export function logout() {
 export async function login() {
 
     window.walletConnection.requestSignIn(nearConfig.contractName)
-    const keyPair = KeyPair.fromRandom("ed25519");
-    const publicKey = keyPair.publicKey.toString();
-    await window.walletConnection.account().addKey(publicKey, // public key for new account
-    CONTRACT_NAME, // contract this key is allowed to call (optional)
-    "run", // methods this key is allowed to call (optional)
-    "2500000000000" // allowance key can use to call methods (optional)
-    )
 }
 
 /**
