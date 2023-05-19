@@ -241,12 +241,10 @@ export default {
         players = getPlayers()
         players.then(
           (result) => {
-            console.log(result);
-            console.log(result.length);
             for (let i = 0; i < result[0].length; i++) {
                 this.players[i] = {
                   "player": result[0][i],
-                  "price": result[1][i].price / YOCTO
+                  "price": (result[1][i].price / YOCTO).toFixed(2)
                 };
             }
           },
