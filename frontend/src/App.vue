@@ -9,11 +9,11 @@
         <button @click="logout">
           <div class="icon-logout"></div>
         </button>
-        <div>
+        <!-- <div>
           <button @click="addPlayers">
             <span> Add me to players</span>
           </button>
-        </div>
+        </div> -->
         <div>
           Price (NEAR):
           <input 
@@ -40,7 +40,7 @@
       <ul v-for="element in players"
           :key="element">
         <li>
-          {{ element["player"] }} ({{ element["price"] }} NEAR)
+          <button @click="setFieldOpponent(element)">{{ element["player"] }} ({{ element["price"] }} NEAR)</button>
         </li>
       </ul>
     </div>
@@ -71,27 +71,33 @@
       </div>
     </div>
   </div>
-
+ 
   <div class="block-container">
-    <div class="wrapper">
-      <div class="grid">
-        <div 
-          v-for="tile in state"
-          :key="tile"
-        >
-          <button class="button list" @click="run(tile)">{{ tile ? tile : "&nbsp;" }}</button>
+    <div class="flex-container">
+      <div class="flex-child magenta">
+        <div class="wrapper">
+          <div class="grid">
+            <div 
+              v-for="tile in state"
+              :key="tile"
+            >
+              <button class="button list" @click="run(tile)">{{ tile ? tile : "&nbsp;" }}</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-
-    Opponent:
-    <div class="wrapper">
-      <div class="grid">
-        <div 
-          v-for="tile in stateOpponent"
-          :key="tile"
-        >
-          <button class="button list">{{ tile ? tile : "&nbsp;" }}</button>
+      
+      <div class="flex-child green">
+        Opponent:
+        <div class="wrapper">
+          <div class="grid">
+            <div 
+              v-for="tile in stateOpponent"
+              :key="tile"
+            >
+              <button class="button list">{{ tile ? tile : "&nbsp;" }}</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -143,7 +149,7 @@ export default {
         this.state.sort(() => Math.random() - 0.5);
       } while (!this.isSolvable());
 
-      localStorage.setItem(FIFTEEN_KEY, this.state);
+      //localStorage.setItem(FIFTEEN_KEY, this.state);
       this.isStartGame = true;
 
       await newGame(this.state);
@@ -192,13 +198,18 @@ export default {
       }
     },
 
+    setFieldOpponent(opponent){
+      if(opponent["player"] !== this.getAccountId())
+      this.opponent_input = opponent["player"]
+    },
+
     updateState(tileIndex) {
       const updated = [...this.state];
 
       updated[this.state.indexOf(0)] = this.state[tileIndex];
       updated[tileIndex] = 0;
       this.state = updated;
-      localStorage.setItem(FIFTEEN_KEY, this.state);
+      //localStorage.setItem(FIFTEEN_KEY, this.state);
     },
 
     async addPlayers() {
@@ -278,17 +289,26 @@ export default {
     },
 
     showOpponentTiles() {
+      let stateOpponent;
       let state;
       setInterval( () => {
-        state = getTiles(this.opponentId);
-        state.then(
+        stateOpponent = getTiles(this.opponentId);
+        stateOpponent.then(
           (result) => {
             this.stateOpponent = result
           },
           // eslint-disable-next-line
           (reason) => { }
         )
-      }, 1000)
+        state = getTiles(this.getAccountId())
+        state.then(
+          (result) => {
+            this.state = result
+          },
+          // eslint-disable-next-line
+          (reason) => { }
+        )
+      }, 300)
 
     },
 
@@ -311,7 +331,7 @@ export default {
     signedIn() { return window.walletConnection.isSignedIn() }
   },
   mounted () {
-    this.getAndSetState();
+    //this.getAndSetState();
     this.showPlayers();
     this.showOpponentTiles();
     this.checkWin();
@@ -404,4 +424,17 @@ export default {
 .list-move {
   transition: transform 0.4s ease;
 }
+
+.flex-container {
+    display: flex;
+}
+
+.flex-child {
+    flex: 1;
+    border: 2px solid teal;
+}  
+
+.flex-child:first-child {
+    margin-right: 20px;
+} 
 </style>

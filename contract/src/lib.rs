@@ -87,6 +87,10 @@ impl Pazzle {
 
     #[payable]
     pub fn set_price(&mut self) {
+        if !self.players_vec.contains(&env::predecessor_account_id()) {
+            self.add_me_to_players();
+        }
+
         let mut player = self.expect_value_found(
             self.players.get(&env::predecessor_account_id()));
 
