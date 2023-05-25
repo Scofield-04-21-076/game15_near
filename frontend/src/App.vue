@@ -258,7 +258,7 @@ export default {
         return true;
       }
       if(tile === 0) {
-        if(this.state.indexOf(tile) + 1 === 15) {
+        if(this.state.indexOf(tile) === 15) {
           return true;
         }
       }
@@ -269,7 +269,7 @@ export default {
         return true;
       }
       if(tile === 0) {
-        if(this.stateOpponent.indexOf(tile) + 1 === 15) {
+        if(this.stateOpponent.indexOf(tile) === 15) {
           return true;
         }
       }
