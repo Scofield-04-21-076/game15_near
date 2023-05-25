@@ -81,7 +81,13 @@
               v-for="tile in state"
               :key="tile"
             >
-              <button class="button list" @click="run(tile)">{{ tile ? tile : "&nbsp;" }}</button>
+              <button 
+                :class="{'position' : isPosition(tile)}" 
+                class="button list" 
+                @click="run(tile)"
+                >
+                  {{ tile ? tile : "&nbsp;" }}
+                </button>
             </div>
           </div>
         </div>
@@ -95,7 +101,12 @@
               v-for="tile in stateOpponent"
               :key="tile"
             >
-              <button class="button list">{{ tile ? tile : "&nbsp;" }}</button>
+              <button 
+                :class="{'position' : isPositionOpponent(tile)}" 
+                class="button list"
+                >
+                  {{ tile ? tile : "&nbsp;" }}
+                </button>
             </div>
           </div>
         </div>
@@ -240,6 +251,28 @@ export default {
       }
 
       return true;
+    },
+
+    isPosition(tile) {
+      if(this.state.indexOf(tile) + 1 === tile) {
+        return true;
+      }
+      if(tile === 0) {
+        if(this.state.indexOf(tile) + 1 === 15) {
+          return true;
+        }
+      }
+    },
+
+    isPositionOpponent(tile) {
+      if(this.stateOpponent.indexOf(tile) + 1 === tile) {
+        return true;
+      }
+      if(tile === 0) {
+        if(this.stateOpponent.indexOf(tile) + 1 === 15) {
+          return true;
+        }
+      }
     },
 
     showPlayers() {
@@ -437,4 +470,19 @@ export default {
 .flex-child:first-child {
     margin-right: 20px;
 } 
+
+.position {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid blue;
+  font-size: 18px;
+  font-family: inherit;
+  background: #fff;
+  cursor: pointer;
+}
 </style>
