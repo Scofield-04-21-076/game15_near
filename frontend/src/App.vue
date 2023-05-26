@@ -1,4 +1,5 @@
 <template>
+  <h1>Game 15 NEAR</h1>
   <div class="block-container">
     <div>
       <button v-if="!signedIn" @click="login">
